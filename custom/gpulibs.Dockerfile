@@ -4,12 +4,7 @@ LABEL maintainer="Christoph Schranz <christoph.schranz@salzburgresearch.at>, Mat
 # https://www.tensorflow.org/install/source#gpu
 # installation via conda leads to errors in version 4.8.2
 # Install CUDA-specific nvidia libraries and update libcudnn8 before that
-USER root
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends  --allow-change-held-packages libcudnn8 && \
-    apt-get install -y --no-install-recommends libnvinfer-dev libnvinfer-plugin-dev  && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN cd /usr/lib/x86_64-linux-gnu && ln -s libnvinfer_plugin.so.8 libnvinfer_plugin.so.7 && ln -s libnvinfer.so.8 libnvinfer.so.7
+# using device_lib.list_local_devices() the cudNN version is shown, adapt version to tested compat
 USER ${NB_UID}
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir tensorflow==2.15.0 keras==2.15.0 && \
@@ -46,9 +41,24 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends cmake libncurses5-dev libncursesw5-dev git && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+USER $NB_UID
+# These need to be two separate pip install commands, otherwise it will throw an error
+# attempting to resolve the nvidia-cuda-nvcc package at the same time as nvidia-pyindex
+RUN pip install --no-cache-dir nvidia-pyindex && \
+    pip install --no-cache-dir nvidia-cuda-nvcc && \
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}"
+
 # reinstall nvcc with cuda-nvcc to install ptax
 USER $NB_UID
-RUN mamba install -c nvidia cuda-nvcc -y && \
+# These need to be two separate pip install commands, otherwise it will throw an error
+# attempting to resolve the nvidia-cuda-nvcc package at the same time as nvidia-pyindex
+RUN pip install --no-cache-dir nvidia-pyindex && \
+    pip install --no-cache-dir nvidia-cuda-nvcc && \
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}"
+
+RUN mamba install -c nvidia cuda-nvcc=12.0.140 -y && \
     mamba clean --all -f -y && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
