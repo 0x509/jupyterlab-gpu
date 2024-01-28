@@ -50,7 +50,8 @@ RUN pip install --no-cache-dir \
     datasets \
     einops \
     pynvml \
-    diffusers["torch"]
+    diffusers["torch"] \
+    jupyterlab-horizon-theme
 
 # Switch back to jovyan to avoid accidental container runs as root
 USER $NB_UID
