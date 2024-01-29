@@ -46,12 +46,14 @@ RUN pip install --no-cache-dir \
 
 RUN pip install --no-cache-dir \
     accelerate \
+    bitsandbytes \
     transformers \
     datasets \
     einops \
     pynvml \
     diffusers["torch"] \
-    jupyterlab-horizon-theme
+    jupyterlab-horizon-theme \
+    opencv-python
 
 # Switch back to jovyan to avoid accidental container runs as root
 USER $NB_UID
